@@ -1,0 +1,47 @@
+name: Repsy NPM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    env:
+      REPSY_USERNAME: ${{ secrets.REPSY_USERNAME }}
+      REPSY_DEPLOY_TOKEN: ${{ secrets.REPSY_DEPLOY_TOKEN }}
+      REPSY_REPO: ${{ secrets.REPSY_REPO }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Detect scoped package
+        id: scope
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          echo "Package name: $NAME"
+          if [[ "$NAME" != @*/* ]]; then
+            exit 1
+          fi
+          SCOPE=$(echo "$NAME" | cut -d'/' -f1)
+          echo "scope=$SCOPE" >> $GITHUB_OUTPUT
+          echo "Detected scope: $SCOPE"
+
+      - name: Create .npmrc
+        run: |
+          cat <<EOF > ~/.npmrc
+          //repo.repsy.io/npm/${{ env.REPSY_USERNAME }}/:_authToken=${{ env.REPSY_DEPLOY_TOKEN }}
+          ${{ steps.scope.outputs.scope }}:registry=https://repo.repsy.io/npm/${{ env.REPSY_USERNAME }}/${{ env.REPSY_REPO }}
+          EOF
+
+      - name: Publish package to Repsy
+        run: npm publish
