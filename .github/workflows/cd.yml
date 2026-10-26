@@ -8,7 +8,7 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: repsy-sm
 
     env:
       REPSY_USERNAME: ${{ secrets.REPSY_USERNAME }}
