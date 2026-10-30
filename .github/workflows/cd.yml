@@ -8,7 +8,7 @@ on:
 
 jobs:
   publish:
-    runs-on: repsy-sm
+    runs-on: ubicloud-standard-2
 
     env:
       REPSY_USERNAME: ${{ secrets.REPSY_USERNAME }}
